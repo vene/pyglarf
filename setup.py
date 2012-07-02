@@ -21,7 +21,7 @@ setup(
     version=pyglarf.__version__,
     author='Vlad Niculae',
     author_email='vlad@vene.ro',
-    py_modules=['pyglarf'],
+    packages=['pyglarf'],
     classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
     install_requires=['nltk'],
 

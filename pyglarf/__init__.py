@@ -10,4 +10,5 @@ Python utilities for working on top of GLARF_'s output.
 from predicate import Predicate
 from glarf_tree import GlarfTree
 
+__all__ = ['Predicate', 'GlarfTree']
 __version__ = '0.1a'
