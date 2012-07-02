@@ -103,6 +103,6 @@ class GlarfTree(Tree):
         return (self._build_pred(pred) for pred in self.subtrees(with_args))
 
     @classmethod
-    def my_parse(cls, s):
+    def glarf_parse(cls, s):
         return cls.parse(s, leaf_pattern=leaf_pattern,
                           remove_empty_top_bracketing=True)
