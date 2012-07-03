@@ -8,7 +8,8 @@ Python utilities for working on top of GLARF_'s output.
 """
 
 from predicate import Predicate
+from nounphrase import NounPhrase
 from glarf_tree import GlarfTree
 
-__all__ = ['Predicate', 'GlarfTree']
+__all__ = ['Predicate', 'GlarfTree', 'NounPhrase']
 __version__ = '0.1a'

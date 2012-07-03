@@ -39,17 +39,15 @@ class Predicate(object):
         print >> repr, '%s/%s [%s]' % (self.head, self.index, attrs_repr)
 
         for tag, sup_tree in self.support:
-            print >> repr, '\tP-SUPPORT [%s]: ' % tag,
-            if self.flat_repr:
-                print >> repr, ' '.join(leaf.format_leaf()
-                                        for leaf in sup_tree.ptb_leaves())
+            print >> repr, '\tP-SUPPORT [%s]: %s' % (tag,
+                        sup_tree.print_flat() if self.flat_repr else sup_tree)
+        for arg, (arg_type, arg_id, arg_trees) in sorted(self.args.items()):
+            print >> repr, '\t%s [%s INDEX: %s]: ' % (arg, arg_type,
+                                                   '+'.join(arg_id)),
 
-        for arg, arg_trees in sorted(self.args.items()):
-            print >> repr, '\t%s: ' % arg,
             for arg_tree in arg_trees:
                 if self.flat_repr:
-                    print >> repr, ' '.join(leaf.format_leaf()
-                                            for leaf in arg_tree.ptb_leaves())
+                    print >> repr, arg_tree.print_flat()
                 else:
                     print >> repr, arg_tree
                     print >> repr
