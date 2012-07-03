@@ -12,10 +12,10 @@ ptb_tags = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD',
             'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB',
             'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN',
             'VBP', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB']
-glarf_pos_tags = ptb_tags + ['|.|', '|,|']
+glarf_pos_tags = ptb_tags + ['|.|', '|,|', '$', '|#|', '|``|', "|''|", '|:|']
 excluded_tags = glarf_pos_tags + ['EC-TYPE']
 
-leaf_pattern = re.compile("""#\(NIL\)    | # The (NIL) marker is a leaf value
+leaf_pattern = re.compile(""" \(NIL\)   | # The (NIL) marker is a leaf value
                              ".*?"      | # "Quoted strings" are leaf values
                              \|.*?\|    | # | barred stuff | are leaf values
                              [^\s\(\)]+'  # and everything else gets broken

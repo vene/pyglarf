@@ -1,3 +1,5 @@
+from nose.tools import raises, assert_equal
+
 from pyglarf import GlarfTree
 
 # A slightly modified tree from ns-autopb101e
@@ -54,4 +56,18 @@ test_sentence = """\
 
 
 def test_successful_parse():
+    """Test that glarf_parse succeeds..."""
     GlarfTree.glarf_parse(test_sentence)
+
+
+@raises(ValueError)
+def test_unsuccessful_parse():
+    """...where the default parse fails"""
+    GlarfTree.parse(test_sentence)
+
+
+def test_leaves():
+    """Test that all PTB leaves are captured"""
+    assert_equal(GlarfTree.glarf_parse(test_sentence).print_flat(),
+                 'In/0 |2003|/1 |,|/2 Yahoo/3 !/4 acquired/5 Overture/6 for/7 '
+                 '$/8 |1.63|/9 billion/10 |.|/11')
