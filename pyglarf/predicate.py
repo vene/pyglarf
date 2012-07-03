@@ -35,12 +35,12 @@ class Predicate(object):
         repr = StringIO.StringIO()
         attrs_repr = ', '.join(['%s: %s' % it for it in self.attrs.items()])
         print >> repr, '%s/%s [%s]' % (self.head, self.index, attrs_repr)
-        for arg, arg_trees in sorted(self.args.items()):
-            print >> repr, '\t%s: ' % arg,
+        for arg, (arg_type, arg_id, arg_trees) in sorted(self.args.items()):
+            print >> repr, '\t%s [%s INDEX: %s]: ' % (arg, arg_type,
+                                                   '+'.join(arg_id)),
             for arg_tree in arg_trees:
                 if self.flat_repr:
-                    print >> repr, ' '.join(leaf.format_leaf()
-                                            for leaf in arg_tree.ptb_leaves())
+                    print >> repr, arg_tree.print_flat()
                 else:
                     print >> repr, arg_tree
                     print >> repr
