@@ -23,10 +23,12 @@ class Predicate(object):
     attrs, dict:
         Any supplementary extracted attributes such as word sense or voice.
     """
-    def __init__(self, index, head='?', args=None, flat_repr=True, **kwargs):
+    def __init__(self, index, head='?', args=None, support=None,
+                 flat_repr=True, **kwargs):
         self.index = index
         self.head = head
         self.args = args
+        self.support = support
         self.attrs = kwargs
         self.flat_repr = flat_repr
 
@@ -35,6 +37,13 @@ class Predicate(object):
         repr = StringIO.StringIO()
         attrs_repr = ', '.join(['%s: %s' % it for it in self.attrs.items()])
         print >> repr, '%s/%s [%s]' % (self.head, self.index, attrs_repr)
+
+        for tag, sup_tree in self.support:
+            print >> repr, '\tP-SUPPORT [%s]: ' % tag,
+            if self.flat_repr:
+                print >> repr, ' '.join(leaf.format_leaf()
+                                        for leaf in sup_tree.ptb_leaves())
+
         for arg, arg_trees in sorted(self.args.items()):
             print >> repr, '\t%s: ' % arg,
             for arg_tree in arg_trees:

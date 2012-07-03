@@ -85,6 +85,7 @@ class GlarfTree(Tree):
         base = attrs.pop('BASE', head[0][0])
         index = pred.head()[0][1]
         args = {}
+        support = []
 
         for arg in pred:
             if not isinstance(arg, Tree) or not arg.node.startswith('P-ARG'):
@@ -94,8 +95,14 @@ class GlarfTree(Tree):
                                         arg.attributes().items()))
             for id_nr in ids:
                 args[arg.node].append(self.phrase_by_id(id_nr))
-        #raise Exception
-        return Predicate(index, base, args, **attrs)
+
+        for tr in pred:
+            if isinstance(tr, GlarfTree) and tr.node == 'P-SUPPORT':
+                support_type = tr[0].node
+                id_nr = tr[0][1][0]  # ugly
+                support.append((support_type, self.phrase_by_id(id_nr)))
+
+        return Predicate(index, base, args, support, **attrs)
 
     def predicates(self):
         with_args = lambda tr: any([daughter.startswith('P-ARG')
