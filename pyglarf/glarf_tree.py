@@ -6,7 +6,7 @@
 import re
 from nltk.tree import Tree
 
-from pyglarf import Predicate, NounPhrase
+from pyglarf import Relation, NounPhrase
 
 ptb_tags = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD',
             'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB',
@@ -108,55 +108,62 @@ class GlarfTree(Tree):
                     for idx in filter(lambda tr: tr.node.startswith('INDEX'),
                                       child[0]):
                         affiliated.append(idx[0])
-		elif 'RELATIVE' in child.node:
-		    relatives[child.node] = child[0]
-	
-#        has_name = len(name) > 0
-#        has_head = head is not None
+                elif 'RELATIVE' in child.node:
+                    relatives[child.node] = child[0]
 
-        return NounPhrase(head, name, date, poses, comps, relatives, apposite, affiliated,
-                      **attrs)
+        return NounPhrase(head, name, date, poses, comps, relatives, apposite,
+                          affiliated, **attrs)
 
-    def _build_pred(self, pred):
-        """Construct a predicate from an appropriate Tree."""
+    def _build_rel(self, parent, pred):
+        """Construct a relation from an appropriate Tree."""
         head = pred.head()
         attrs = pred.attributes()
+        attrs['CATEGORY'] = pred.node
+        attrs['PARENT_CATEGORY'] = parent.node
         base = attrs.pop('BASE', head[0][0])
         index = pred.head()[0][1]
         args = {}
+        advs = {}
         support = []
 
-        for arg in pred:
-            if not isinstance(arg, Tree) or not arg.node.startswith('P-ARG'):
-                continue
-            if arg[0] == ' (NIL)':
-                args[arg.node] = ('NIL', [], [])
-                continue
-
-            arg_type = arg[0].node
-            args[arg.node] = (arg_type, [], [])
-            ids = (k[1] for k in filter(lambda k: k[0].startswith('INDEX'),
-                                        arg[0].attributes().items()))
-            for id_nr in ids:
-                args[arg.node][1].append(id_nr)
-                args[arg.node][2].append(self.phrase_by_id(id_nr))
-
         for tr in pred:
-            if isinstance(tr, GlarfTree) and tr.node == 'P-SUPPORT':
+            if not isinstance(tr, GlarfTree):
+                continue
+            if tr.node.startswith('P-ARG'):
+                if tr[0] == ' (NIL)':
+                    args[tr.node] = ('NIL', [], [])
+                    continue
+
+                arg_type = tr[0].node
+                args[tr.node] = (arg_type, [], [])
+                ids = (k[1] for k in filter(lambda k: k[0].startswith('INDEX'),
+                                            tr[0].attributes().items()))
+                for id_nr in ids:
+                    args[tr.node][1].append(id_nr)
+                    args[tr.node][2].append(self.phrase_by_id(id_nr))
+            elif tr.node == 'P-SUPPORT':
                 support_type = tr[0].node
                 id_nr = tr[0][1][0]  # ugly
                 support.append((support_type, self.phrase_by_id(id_nr)))
 
-        return Predicate(index, base, args, support, **attrs)
+        for tr in parent:
+            if not isinstance(tr, GlarfTree):
+                continue
+            if tr.node.startswith('ADV'):
+                advs[tr.node] = (tr[0].node, tr[0])
+
+        return Relation(index, base, args, support, advs, **attrs)
 
     def nps(self):
         is_np = lambda tr: tr.node == 'NP' and 'EC-TYPE' not in tr.daughters()
         return (self._build_np(np) for np in self.subtrees(is_np))
 
-    def predicates(self):
+    def rels(self):
         with_args = lambda tr: any([daughter.startswith('P-ARG')
                                     for daughter in tr.daughters()])
-        return (self._build_pred(pred) for pred in self.subtrees(with_args))
+        for pos in self.treepositions():
+            if isinstance(self[pos], GlarfTree) and with_args(self[pos]):
+                yield self._build_rel(self[pos[:-2]], self[pos])
 
     @classmethod
     def glarf_parse(cls, s):
