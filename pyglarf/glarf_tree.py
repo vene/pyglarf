@@ -87,7 +87,7 @@ class GlarfTree(Tree):
         name = []
         date = None
         attrs = np.attributes()
-        poses, comps = {}, {}
+        poses, comps, relatives = {}, {}, {}
         apposite = []
         affiliated = []
         for child in np:
@@ -108,11 +108,13 @@ class GlarfTree(Tree):
                     for idx in filter(lambda tr: tr.node.startswith('INDEX'),
                                       child[0]):
                         affiliated.append(idx[0])
-
+		elif 'RELATIVE' in child.node:
+		    relatives[child.node] = child[0]
+	
 #        has_name = len(name) > 0
 #        has_head = head is not None
 
-        return NounPhrase(head, name, date, poses, comps, apposite, affiliated,
+        return NounPhrase(head, name, date, poses, comps, relatives, apposite, affiliated,
                       **attrs)
 
     def _build_pred(self, pred):

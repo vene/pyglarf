@@ -12,7 +12,7 @@ def _flat_list(l):
 
 class NounPhrase(object):
     """Describes an NP."""
-    def __init__(self, head, name, date, poses, comps, apposite=None,
+    def __init__(self, head, name, date, poses, comps, relatives, apposite=None,
                  affiliated=None, **kwargs):
         self.head = head
         self.name = name
@@ -21,6 +21,7 @@ class NounPhrase(object):
         self.comps = comps
         self.apposite = apposite
         self.affiliated = affiliated
+        self.relatives = relatives
         self.attrs = kwargs
 
     def __repr__(self):
@@ -37,4 +38,7 @@ class NounPhrase(object):
         for pos, tree in (sorted(self.poses.items()) +
                          sorted(self.comps.items())):
             print >> repr, '%s: %s' % (pos, tree.print_flat())
+        for node, relative in sorted(self.relatives.items()):
+            print >> repr, '%s [%s]: %s' % (node, relative.node,
+                                            relative.print_flat())
         return repr.getvalue()
