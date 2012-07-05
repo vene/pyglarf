@@ -12,33 +12,25 @@ def _flat_list(l):
 
 class NounPhrase(object):
     """Describes an NP."""
-    def __init__(self, head, name, date, poses, comps, relatives, apposite=None,
-                 affiliated=None, **kwargs):
+    def __init__(self, head, role, name, date, subphrases, links, **kwargs):
         self.head = head
+        self.role = role
         self.name = name
         self.date = date
-        self.poses = poses
-        self.comps = comps
-        self.apposite = apposite
-        self.affiliated = affiliated
-        self.relatives = relatives
+        self.subphrases = subphrases
+        self.links = links
         self.attrs = kwargs
 
     def __repr__(self):
         repr = StringIO()
         attrs_repr = ', '.join(['%s: %s' % it for it in self.attrs.items()])
-        print >> repr, 'NP [%s]' % attrs_repr
+        print >> repr, '%s [%s]' % (self.role, attrs_repr)
         print >> repr, 'HEAD: %s' % _flat_list(self.head)
         print >> repr, 'NAME: %s' % _flat_list(self.name)
         print >> repr, 'DATE: %s' % self.date
-        if self.apposite:
-            print >> repr, 'APPOSITE: %s' % '+'.join(self.apposite)
-        if self.affiliated:
-            print >> repr, 'AFFILIATED: %s' % '+'.join(self.affiliated)
-        for pos, tree in (sorted(self.poses.items()) +
-                         sorted(self.comps.items())):
-            print >> repr, '%s: %s' % (pos, tree.print_flat())
-        for node, relative in sorted(self.relatives.items()):
-            print >> repr, '%s [%s]: %s' % (node, relative.node,
-                                            relative.print_flat())
+        for tag, indices in sorted(self.links.items()):
+            print >> repr, '%s: %s' % (tag, '+'.join(indices))
+
+        for tag, tree in sorted(self.subphrases.items()):
+            print >> repr, '%s [%s]: %s' % (tag, tree.node, tree.print_flat())
         return repr.getvalue()

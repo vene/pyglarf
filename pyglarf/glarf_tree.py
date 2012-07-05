@@ -87,32 +87,32 @@ class GlarfTree(Tree):
         name = []
         date = None
         attrs = np.attributes()
-        poses, comps, relatives = {}, {}, {}
-        apposite = []
-        affiliated = []
+        subphrases = {}  # specifiers, complements and relative clauses
+        links = {}  # apposites and affiliated links
+        parent = self.subtrees(lambda tr: np in tr).next()
+        role = parent.node
+
+        # gather interesting attributes of the NP from its children
         for child in np:
             if isinstance(child, GlarfTree):
-                if '-POS' in child.node:
-                    poses[child.node] = child
-                elif 'COMP' in child.node:
-                    comps[child.node] = child
+                # subtrees:
+                if any(t in child.node for t in ('-POS', 'COMP', 'RELATIVE')):
+                    subphrases[child.node] = child[0]
+
+                # key fields
                 elif child.node.startswith('NAME'):
                     name.append(child)
                 elif child.node == 'REG-DATE':
                     date = child
-                elif child.node == 'APPOSITE':
-                    for idx in filter(lambda tr: tr.node.startswith('INDEX'),
-                                      child[0]):
-                        apposite.append(idx[0])
-                elif child.node == 'AFFILIATED':
-                    for idx in filter(lambda tr: tr.node.startswith('INDEX'),
-                                      child[0]):
-                        affiliated.append(idx[0])
-                elif 'RELATIVE' in child.node:
-                    relatives[child.node] = child[0]
 
-        return NounPhrase(head, name, date, poses, comps, relatives, apposite,
-                          affiliated, **attrs)
+                # links
+                elif child.node in ('APPOSITE', 'AFFILIATED'):
+                    links[child.node] = []
+                    for idx in filter(lambda tr: tr.node.startswith('INDEX'),
+                                      child[0]):
+                        links[child.node].append(idx[0])
+
+        return NounPhrase(head, role, name, date, subphrases, links, **attrs)
 
     def _build_rel(self, parent, pred):
         """Construct a relation from an appropriate Tree."""
