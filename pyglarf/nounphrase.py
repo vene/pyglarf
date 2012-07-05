@@ -26,6 +26,9 @@ class NounPhrase(object):
         attrs_repr = ', '.join(['%s: %s' % it for it in self.attrs.items()])
         print >> repr, '%s [%s]' % (self.role, attrs_repr)
         print >> repr, 'HEAD: %s' % _flat_list(self.head)
+        if self.head is not None:
+            print >> repr, 'RECURSIVE_HEAD: %s' % _flat_list(
+                                                self.head.most_specific_head())
         print >> repr, 'NAME: %s' % _flat_list(self.name)
         print >> repr, 'DATE: %s' % self.date
         for tag, indices in sorted(self.links.items()):

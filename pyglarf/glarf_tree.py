@@ -66,7 +66,7 @@ class GlarfTree(Tree):
         return None
 
     def most_specific_head(self):
-        head = self.head()
+        head = self[0].head()
         if not head:
             return self
         else:
