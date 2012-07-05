@@ -147,13 +147,18 @@ class GlarfTree(Tree):
 
                 arg_type = tr[0].node
                 args[tr.node] = ([], arg_type, [], [])
-                ids = (k[1] for k in filter(lambda k: k[0].startswith('INDEX'),
-                                            tr[0].attributes().items()))
+                ids = [k[1] for k in filter(lambda k: k[0].startswith('INDEX'),
+                                            tr[0].attributes().items())]
                 for id_nr in ids:
                     phrase = self.phrase_by_id(id_nr)
                     args[tr.node][0].append(phrase.node)
                     args[tr.node][2].append(id_nr)
                     args[tr.node][3].append(phrase)
+
+                if len(ids) == 0 and any(t.node == 'TREE+INDEX'
+                                         for t in tr[0]):
+                    args[tr.node][0].append('TREE+INDEX currently unsupported')
+                    args[tr.node][3].append(GlarfTree('', []))
 
             elif tr.node == 'P-SUPPORT':
                 support_type = tr[0].node
