@@ -42,16 +42,17 @@ class Relation(object):
         print >> repr, '%s/%s [%s]' % (self.head, self.index, attrs_repr)
 
         # show supports
-        for tag, sup_tree in self.support:
-            print >> repr, 'P-SUPPORT [%s]: %s' % (tag,
+        for role, tag, sid, sup_tree in self.support:
+            print >> repr, 'P-SUPPORT [%s %s INDEX: %s]: %s' % (role, tag, sid,
                         sup_tree.print_flat() if self.flat_repr else sup_tree)
 
         # show arguments
-        for arg, (arg_type, arg_id, arg_trees) in sorted(self.args.items()):
-            print >> repr, '%s [%s INDEX: %s]: ' % (arg, arg_type,
-                                                   '+'.join(arg_id)),
+        for arg, (roles, arg_type, arg_id, trees) in sorted(self.args.items()):
+            print >> repr, '%s [%s %s INDEX: %s]: ' % (arg, '+'.join(roles),
+                                                       arg_type,
+                                                       '+'.join(arg_id)),
 
-            for arg_tree in arg_trees:
+            for arg_tree in trees:
                 print >> repr, (arg_tree.print_flat()
                                 if self.flat_repr else arg_tree)
 

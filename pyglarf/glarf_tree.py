@@ -49,7 +49,10 @@ class GlarfTree(Tree):
                                                   for subtr in tr)))
         res = list(res)
         if len(res) == 1:
-            return res[0]
+            result = res[0]
+            # try to get its parent
+            parent = self.parent(result)
+            return parent if parent is not None else result
         elif len(res) > 1:
             return GlarfTree('', res)
         else:
@@ -80,6 +83,13 @@ class GlarfTree(Tree):
             return '%s/%s' % (self[0], '+'.join(self[1:]))
         else:
             return ' '.join(leaf.print_flat() for leaf in self.ptb_leaves())
+
+    def parent(self, subtree):
+        # XXX: why can't we use trees with backlinks?
+        try:
+            return self.subtrees(lambda tr: subtree in tr).next()
+        except StopIteration:
+            return None
 
     def _build_np(self, np):
         """Construct an NP object"""
@@ -131,20 +141,25 @@ class GlarfTree(Tree):
                 continue
             if tr.node.startswith('P-ARG'):
                 if tr[0] == ' (NIL)':
-                    args[tr.node] = ('NIL', [], [])
+                    args[tr.node] = ('NIL', 'NIL', [], [])
                     continue
 
                 arg_type = tr[0].node
-                args[tr.node] = (arg_type, [], [])
+                args[tr.node] = ([], arg_type, [], [])
                 ids = (k[1] for k in filter(lambda k: k[0].startswith('INDEX'),
                                             tr[0].attributes().items()))
                 for id_nr in ids:
-                    args[tr.node][1].append(id_nr)
-                    args[tr.node][2].append(self.phrase_by_id(id_nr))
+                    phrase = self.phrase_by_id(id_nr)
+                    args[tr.node][0].append(phrase.node)
+                    args[tr.node][2].append(id_nr)
+                    args[tr.node][3].append(phrase)
+
             elif tr.node == 'P-SUPPORT':
                 support_type = tr[0].node
-                id_nr = tr[0][1][0]  # ugly
-                support.append((support_type, self.phrase_by_id(id_nr)))
+                id_nr = tr[0][1][0]  # ugly but works
+                phrase = self.phrase_by_id(id_nr)
+                phrase_role = phrase.node
+                support.append((phrase_role, support_type, id_nr, phrase))
 
         for tr in parent:
             if not isinstance(tr, GlarfTree):
