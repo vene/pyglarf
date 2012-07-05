@@ -32,9 +32,10 @@ class GlarfTree(Tree):
     def attributes(self, excluded=excluded_tags):
         """Return all attribute leaves of a subtree, as a Python dictionary"""
         return {tr.node: ' '.join(tr) for tr in filter(lambda t:
-                                                       t.height() == 2 and
-                                                       t.node not in excluded,
-                                                       self)}
+                                                isinstance(t, GlarfTree) and
+                                                t.height() == 2 and
+                                                t.node not in excluded,
+                                                self)}
 
     def ptb_leaves(self, included=glarf_pos_tags):
         return self.subtrees(lambda t: t.height() == 2 and t.node in included)
@@ -165,7 +166,11 @@ class GlarfTree(Tree):
             if not isinstance(tr, GlarfTree):
                 continue
             if tr.node.startswith('ADV'):
-                advs[tr.node] = (tr[0].node, tr[0])
+                ids = [k[1] for k in filter(lambda k: k[0].startswith('INDEX'),
+                                            tr[0].attributes().items())]
+
+                adv_id = ids.pop() if len(ids) > 0 else None
+                advs[tr.node] = (tr[0].node, adv_id, tr[0])
 
         return Relation(index, base, args, support, advs, **attrs)
 

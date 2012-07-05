@@ -57,7 +57,7 @@ class Relation(object):
                                 if self.flat_repr else arg_tree)
 
         # show adverbs
-        for adv, (adv_type, adv_tree) in sorted(self.advs.items()):
-            print >> repr, '%s [%s]: %s' % (adv, adv_type,
-                        adv_tree.print_flat() if self.flat_repr else adv_tree)
+        for adv, (adv_type, adv_id, tree) in sorted(self.advs.items()):
+            print >> repr, '%s [%s INDEX: %s]: %s' % (adv, adv_type, adv_id,
+                           tree.print_flat() if self.flat_repr else tree)
         return repr.getvalue()
