@@ -107,7 +107,8 @@ class GlarfTree(Tree):
         for child in np:
             if isinstance(child, GlarfTree):
                 # subtrees:
-                if any(t in child.node for t in ('-POS', 'COMP', 'RELATIVE')):
+                if any(t in child.node for t in ('-POS', 'COMP', 'RELATIVE',
+                                                 'ADV')):
                     subphrases[child.node] = child[0]
 
                 # key fields
