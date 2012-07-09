@@ -4,6 +4,8 @@
 # License: BSD
 
 import re
+from collections import defaultdict
+
 from nltk.tree import Tree
 
 from pyglarf import Relation, NounPhrase
@@ -22,6 +24,15 @@ leaf_pattern = re.compile(""" \(NIL\)   | # The (NIL) marker is a leaf value
                           """, re.X)
 
 leaf_pattern = ' \(NIL\)|".*?"|\|.*?\||[^\s\(\)]+'
+
+
+def _flat_list(l, indices=True):
+    if l is None or len(l) == 0:
+        return None
+    elif isinstance(l, str):
+        return l
+    else:
+        return ' '.join(elem.print_flat(indices) for elem in l)
 
 
 class GlarfTree(Tree):
@@ -79,11 +90,17 @@ class GlarfTree(Tree):
         else:
             return phrase.most_specific_head()
 
-    def print_flat(self):
+    def print_flat(self, indices=True):
         if self.height() == 2:
-            return '%s/%s' % (self[0], '+'.join(self[1:]))
+            if indices:
+                # ex.: John/1, or: "put off"/5+6
+                return '%s/%s' % (self[0], '+'.join(self[1:]))
+            else:
+                # ex.: John, or "put off"
+                return str(self[0])
         else:
-            return ' '.join(leaf.print_flat() for leaf in self.ptb_leaves())
+            return ' '.join(leaf.print_flat(indices)
+                            for leaf in self.ptb_leaves())
 
     def parent(self, subtree):
         # XXX: why can't we use trees with backlinks?
@@ -182,7 +199,38 @@ class GlarfTree(Tree):
 
     def nps(self):
         is_np = lambda tr: tr.node == 'NP' and 'EC-TYPE' not in tr.daughters()
-        return (self._build_np(np) for np in self.subtrees(is_np))
+        return ((self._build_np(np), np) for np in self.subtrees(is_np))
+
+    def entities(self):
+        """Extracts NPs and builds a dictionary of entity-attributes"""
+        entities = defaultdict(list)
+        for np, tree in self.nps():
+            if len(np.name) > 0:
+                key = _flat_list(np.name, indices=False)
+                entities[key].extend(
+                    attr.print_flat(indices=False)
+                    for attr in np.subphrases.values()
+                )
+            elif np.head is not None:
+                # Take the linked np with the most semantic info (???)
+                linked_structures = [self.phrase_by_id(idx)[0]
+                                     for _, indices in np.links.items()
+                                     for idx in indices]
+                linked_structures.append(tree)
+                score = lambda tree: filter(lambda x: x.node == 'PATTERN'
+                                                    and x[0] == 'NAME', tree)
+                linked_structures = sorted(linked_structures, key=score)
+                key = linked_structures[-1]
+                if key.head() is not None:
+                    key = key.head().most_specific_head()
+                key = key.print_flat(indices=False)
+                entities[key].extend(
+                    attr.print_flat(indices=False)
+                    for attr in np.subphrases.values()
+                )
+                entities[key].extend(x.print_flat(indices=False)
+                                     for x in linked_structures[:-1])
+        return entities
 
     def rels(self):
         with_args = lambda tr: any([daughter.startswith('P-ARG')
