@@ -80,11 +80,11 @@ class GlarfWrapper(object):
         if self.verbose >= 1:
             print self.log[1]
         # set environment variables
-        os.environ['GLARF'] = PATH
-        os.environ['GLARF_JET'] = os.path.join(PATH, 'JET')
+        os.environ['GLARF'] = self.path
+        os.environ['GLARF_JET'] = os.path.join(self.path, 'JET')
         os.environ['PATH'] += ':.'
         successful_copy = call(['copy-glarf-scripts ' + self.wd], shell=True,
-                               cwd=os.path.join(PATH, 'commands-2010'))
+                               cwd=os.path.join(self.path, 'commands-2010'))
         assert successful_copy == 0
 
         os.mkdir(os.path.join(self.wd, 'tmp'))
