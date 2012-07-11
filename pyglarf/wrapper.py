@@ -25,7 +25,12 @@ class GlarfWrapper(object):
 
     Parameters
     ----------
-    path, string: the root of the local Glarf installation
+    path, string:
+        the root of the local Glarf installation
+    verbose, int:
+        verbosity degree.
+        1: displays the log file on object creation
+        2: in addition, prints glarf commands being run
 
     Examples
     --------
@@ -63,14 +68,17 @@ class GlarfWrapper(object):
 
     TODO: if it's too slow, support batch
     """
-    def __init__(self, path=PATH):
+    def __init__(self, path=PATH, verbose=0):
         self.path = path
+        self.verbose = verbose
         self._glarf_regex = re.compile('(\(\(.*?\(SENTENCE-OFFSET [0-9]+\)+)',
                                        re.DOTALL)
 
     def __enter__(self):
         self.wd = tempfile.mkdtemp()
         self.log = tempfile.mkstemp()
+        if self.verbose >= 1:
+            print self.log[1]
         # set environment variables
         os.environ['GLARF'] = PATH
         os.environ['GLARF_JET'] = os.path.join(PATH, 'JET')
@@ -83,9 +91,9 @@ class GlarfWrapper(object):
         in_file = os.path.join(self.wd, 'tmp', 'tmp.sgm')
         self._filenames = {
             'in': in_file,
-            'jet_out': in_file + '.sent',
-            'parse_out': in_file + '.sent.chout',
-            'glarf_out': in_file + '.sent.ns-autopb101e'
+            'jet': in_file + '.sent',
+            'parse': in_file + '.sent.chout',
+            'glarf': in_file + '.sent.ns-autopb101e'
         }
         return self
 
@@ -94,17 +102,21 @@ class GlarfWrapper(object):
 
     def _invoke_glarf(self, type, args):
         """Invokes $ make-all-glarf-type target_dir args"""
-        successful_call = call(['make-all-glarf-%s tmp %s' % (type, args)],
-                               cwd=self.wd, shell=True, stderr=self.log[0],
-                               stdout=self.log[0])
+
+        cmd = 'make-all-glarf-%s tmp %s' % (type, args)
+        if self.verbose >= 2:
+            print cmd
+
+        successful_call = call(cmd, cwd=self.wd, shell=True,
+                               stderr=self.log[0], stdout=self.log[0])
         # FIXME: returns 0 even when it fails!!
         if successful_call != 0:
             raise RuntimeError('Glarf invocation failed. Output log can be '
                                'found in %s.' % self.log[1])
 
-        jet_output = open(self._filenames['jet_out']).read()
-        parse_output = open(self._filenames['parse_out']).read()
-        glarf_output = open(self._filenames['glarf_out']).read()
+        jet_output = open(self._filenames['jet']).read()
+        parse_output = open(self._filenames['parse']).read()
+        glarf_output = open(self._filenames['glarf']).read()
 
         return jet_output, parse_output, glarf_output
 
@@ -178,8 +190,8 @@ class GlarfWrapper(object):
             paragraphs = [paragraphs]
 
         with open(self._filenames['in'], 'w') as infile:
-            infile.writelines('<TEXT><P>%s</P></TEXT>\n' % par
-                              for par in paragraphs)
+            infile.writelines(['<TEXT><P>%s</P></TEXT>\n' % par
+                              for par in paragraphs])
 
         jet_output, parse_output, glarf_output = self._invoke_glarf('b', 'N P')
         return (jet_output.splitlines(),

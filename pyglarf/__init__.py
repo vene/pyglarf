@@ -10,6 +10,7 @@ Python utilities for working on top of GLARF_'s output.
 from relation import Relation
 from nounphrase import NounPhrase
 from glarf_tree import GlarfTree
+from wrapper import GlarfWrapper
 
-__all__ = ['Relation', 'GlarfTree', 'NounPhrase']
+__all__ = ['Relation', 'GlarfTree', 'NounPhrase', 'GlarfWrapper']
 __version__ = '0.1a'
