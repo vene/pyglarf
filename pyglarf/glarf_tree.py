@@ -76,6 +76,16 @@ class GlarfTree(Tree):
                 return subtr
         return None
 
+    def index(self):
+        for subtr in self:
+            if isinstance(subtr, Tree) and subtr.node == 'INDEX':
+                return subtr[0]
+        for subtr in self:
+            if isinstance(subtr, Tree) and subtr.node == 'HEAD':
+                return subtr.index()
+        return 'leaf' + '+'.join(self.ptb_leaves().next()[1:])
+        return None
+
     def most_specific_head(self):
         head = self[0].head()
         if not head:
@@ -115,6 +125,9 @@ class GlarfTree(Tree):
         name = []
         date = None
         attrs = np.attributes()
+        index = attrs.pop('INDEX', None)
+        if index is None:
+            index = np.index()
         subphrases = {}  # specifiers, complements and relative clauses
         links = {}  # apposites and affiliated links
         parent = self.subtrees(lambda tr: np in tr).next()
@@ -141,7 +154,8 @@ class GlarfTree(Tree):
                                       child[0]):
                         links[child.node].append(idx[0])
 
-        return NounPhrase(head, role, name, date, subphrases, links, **attrs)
+        return NounPhrase(index, head, role, name, date, subphrases,
+                          links, **attrs)
 
     def _build_rel(self, parent, pred):
         """Construct a relation from an appropriate Tree."""
@@ -204,32 +218,55 @@ class GlarfTree(Tree):
     def entities(self):
         """Extracts NPs and builds a dictionary of entity-attributes"""
         entities = defaultdict(list)
-        for np, tree in self.nps():
-            if len(np.name) > 0:
-                key = _flat_list(np.name, indices=False)
-                entities[key].extend(
-                    attr.print_flat(indices=False)
-                    for attr in np.subphrases.values()
-                )
-            elif np.head is not None:
-                # Take the linked np with the most semantic info (???)
-                linked_structures = [self.phrase_by_id(idx)[0]
-                                     for _, indices in np.links.items()
-                                     for idx in indices]
-                linked_structures.append(tree)
-                score = lambda tree: filter(lambda x: x.node == 'PATTERN'
-                                                    and x[0] == 'NAME', tree)
-                linked_structures = sorted(linked_structures, key=score)
-                key = linked_structures[-1]
-                if key.head() is not None:
-                    key = key.head().most_specific_head()
-                key = key.print_flat(indices=False)
-                entities[key].extend(
-                    attr.print_flat(indices=False)
-                    for attr in np.subphrases.values()
-                )
-                entities[key].extend(x.print_flat(indices=False)
-                                     for x in linked_structures[:-1])
+        nps_by_id = {}
+        entities = {}
+        for np, _ in self.nps():
+            idx = np.index
+            nps_by_id[idx] = np
+            entities[idx] = np.short_repr(), []
+
+        for idx, np in nps_by_id.items():
+            #print "***"
+            #print np.short_repr()
+            #if len(np.name) > 0:
+            #    key = _flat_list(np.name, indices=False)
+            #    entities[key].extend(
+            #        attr.print_flat(indices=False)
+            #        for attr in np.subphrases.values()
+            #    )
+            #elif np.head is not None:
+            # Take the linked np with the most semantic info (???)
+            linked_structures = [nps_by_id.get(sub_idx)
+                                 for _, indices in np.links.items()
+                                 for sub_idx in indices]
+            linked_structures.append(np)
+            linked_structures = filter(lambda x: x is not None, linked_structures)
+
+            # score counts the amount of semantic info, I hope
+            score = lambda np: len(filter(lambda (key, val):
+                                      key == 'PATTERN' and val == 'NAME' or
+                                      key == 'SEM-FEATURE' or
+                                      key == 'NE-TYPE',
+                                      np.attrs.items()))
+
+            linked_structures = sorted(linked_structures, key=score)
+            best = linked_structures[-1]
+            key = best.index
+            #print key, idx
+            #print linked_structures
+            if key == idx:
+                entities[key][1].extend(attr.print_flat(indices=False)
+                                        for apos in linked_structures[:-1]
+                                        for attr in apos.subphrases.values())
+            else:
+                head = np.head
+                while isinstance(head, GlarfTree) and head.height() > 2:
+                    entities[key][1].append(head.print_flat(indices=False))
+                    head = head[0].head()
+
+            entities[key][1].extend(attr.print_flat(indices=False)
+                for attr in np.subphrases.values()
+            )
         return entities
 
     def rels(self):
