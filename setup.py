@@ -23,6 +23,5 @@ setup(
     author_email='vlad@vene.ro',
     packages=['pyglarf'],
     classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
-    install_requires=['nltk'],
 
 )

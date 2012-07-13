@@ -6,7 +6,12 @@
 import re
 from collections import defaultdict
 
-from nltk.tree import Tree
+# backport
+try:
+    raise ImportError
+    from nltk.tree import Tree
+except ImportError:
+    from .nltkbackports import Tree
 
 from pyglarf import Relation, NounPhrase
 

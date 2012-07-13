@@ -16,8 +16,8 @@ myself as well, wherever my projects will lead me.
 
 ## Installation
 
-This module requires `nltk.Tree` for parsing TreeBank-style paranthesised
-trees.
+`nltk` is no longer a hard dependency, but some instance methods of GlarfTree,
+such as `draw`, will not work without it.
 
 ## Example
 

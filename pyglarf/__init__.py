@@ -13,4 +13,4 @@ from glarf_tree import GlarfTree
 from wrapper import GlarfWrapper
 
 __all__ = ['Relation', 'GlarfTree', 'NounPhrase', 'GlarfWrapper']
-__version__ = '0.1a'
+__version__ = '0.1.1a'
