@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Natural Language Toolkit: Text Trees
 #
 # Copyright (C) 2001-2012 NLTK Project
