@@ -8,7 +8,6 @@ from collections import defaultdict
 
 # backport
 try:
-    raise ImportError
     from nltk.tree import Tree
 except ImportError:
     from .nltkbackports import Tree
