@@ -1,6 +1,6 @@
 # pyglarf
 
-Python utilities for working on top of
+Python utilities for wrapping and working on top of
 [GLARF](http://nlp.cs.nyu.edu/meyers/GLARF.html)'s output.
 
 ## Context
@@ -21,11 +21,22 @@ trees.
 
 ## Example
 
-TODO
+    >>> with GlarfWrapper() as gw:
+    ...     _, _, glarf_out = gw.make_sentences("John died in Boston in 1972.")
+    ... 
+    >>> tree = GlarfTree.glarf_parse(glarf_out[0])
+    >>> print list(tree.rels())
+    [DIE/1 [CATEGORY: VG, INDEX: 10, SENSE-NAME: "STERBEN", VERB-SENSE: 1, PARENT_CATEGORY: VP]
+    P-ARG1 [SBJ NP INDEX: 5]:  John/0
+    P-ARGM-LOC [ADV2 PP INDEX: 12]:  in/4 |1972|/5
+    ADV1 [PP INDEX: 11]: in/2 Boston/3
+    ADV2 [PP INDEX: 12]: in/4 |1972|/5
+    ]
+    >>> tree.entities()
+    {'9': ('|1972|', []), '8': ('Boston', []), '5': ('John', []), 'leaf5': ('|1972|', [])}
 
 ## Future plans
 
-* Wrap GLARF completely, so it's easier to test this out for a few sentences.
 * Write documentation and tests
 * Try to cover the entire GLARF specification (help appreciated!)
 
