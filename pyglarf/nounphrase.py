@@ -12,28 +12,44 @@ def _flat_list(l, indices=True):
 
 class NounPhrase(object):
     """Describes an NP."""
-    def __init__(self, index, head, role, name, date, subphrases, links,
+    def __init__(self, index, head, role, name, conj, date, subphrases, links,
                  **kwargs):
         assert index is not None
         self.index = index
         self.head = head
         self.role = role
         self.name = name
+        self.conj = conj
         self.date = date
         self.subphrases = subphrases
         self.links = links
         self.attrs = kwargs
 
         # Calculated attributes
-        if self.head is not None:
+        if self.head:
             self.rec_head_ = self.head.most_specific_head()
             assert self.rec_head_.index is not None
-        # TODO: conjunctions/disjunctions?
+
+        if self.conj:
+            self.rec_conj_ = []
+            for t in self.conj:
+                if t.node.startswith('CONJOINED'):
+                    continue
+                if t.node.startswith('CONJUNCTION'):
+                    self.rec_conj_.append(t[0])
+                elif t.node.startswith('CONJ'):
+                    self.rec_conj_.append(t[0].head().most_specific_head()
+                                          if t[0].head() is not None
+                                          else t[0])
 
     def __repr__(self):
         repr = StringIO()
         attrs_repr = ', '.join(['%s: %s' % it for it in self.attrs.items()])
         print >> repr, '%s [%s]' % (self.role, attrs_repr)
+        if self.conj:
+            for t in self.conj:
+                print >> repr, '%s: %s' % (t.node, t.print_flat())
+            print >> repr, 'CONJ_REC_HEADS: %s' % _flat_list(self.rec_conj_)
         print >> repr, 'HEAD: %s' % _flat_list(self.head)
         if self.head is not None:
             print >> repr, 'RECURSIVE_HEAD: %s' % _flat_list(self.rec_head_)
@@ -47,11 +63,13 @@ class NounPhrase(object):
         return repr.getvalue()
 
     def short_repr(self):
-        if len(self.name) > 0:
+        if self.name:
             return _flat_list(self.name, indices=False)
-        elif self.head is not None:
+        elif self.head:
             return _flat_list(self.head, indices=False)
-        elif self.date is not None:
+        elif self.date:
             return self.date[0]
+        elif self.conj:
+            return _flat_list(self.rec_conj_, indices=False)
         else:
             return None

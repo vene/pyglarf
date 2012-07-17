@@ -127,6 +127,7 @@ class GlarfTree(Tree):
         """Construct an NP object"""
         head = np.head()
         name = []
+        conj = []
         date = None
         attrs = np.attributes()
         index = attrs.pop('INDEX', None)
@@ -150,6 +151,9 @@ class GlarfTree(Tree):
                     name.append(child)
                 elif child.node == 'REG-DATE':
                     date = child
+                elif child.node.startswith('CONJ') and \
+                     not child.node.startswith('CONJOINED'):
+                    conj.append(child)
 
                 # links
                 elif child.node in ('APPOSITE', 'AFFILIATED'):
@@ -158,7 +162,7 @@ class GlarfTree(Tree):
                                       child[0]):
                         links[child.node].append(idx[0])
 
-        return NounPhrase(index, head, role, name, date, subphrases,
+        return NounPhrase(index, head, role, name, conj, date, subphrases,
                           links, **attrs)
 
     def _build_rel(self, parent, pred):
@@ -206,7 +210,8 @@ class GlarfTree(Tree):
         for tr in parent:
             if not isinstance(tr, GlarfTree):
                 continue
-            if tr.node.startswith('ADV'):
+            if any(tr.node.startswith(tag) for tag in ('ADV', 'OBJ', 'PRD',
+                                                       'L-SBJ')):
                 ids = [k[1] for k in filter(lambda k: k[0].startswith('INDEX'),
                                             tr[0].attributes().items())]
 
