@@ -54,7 +54,7 @@ class NounPhrase(object):
         if self.head is not None:
             print >> repr, 'RECURSIVE_HEAD: %s' % _flat_list(self.rec_head_)
         print >> repr, 'NAME: %s' % _flat_list(self.name)
-        print >> repr, 'DATE: %s' % self.date[0] if self.date else None
+        print >> repr, 'DATE: %s' % (self.date[0] if self.date else None)
         for tag, indices in sorted(self.links.items()):
             print >> repr, '%s: %s' % (tag, '+'.join(indices))
 
