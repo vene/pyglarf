@@ -13,7 +13,7 @@ def _flat_list(l, indices=True):
 class NounPhrase(object):
     """Describes an NP."""
     def __init__(self, index, head, role, name, conj, date, subphrases, links,
-                 **kwargs):
+                 full_flat, **kwargs):
         assert index is not None
         self.index = index
         self.head = head
@@ -23,6 +23,7 @@ class NounPhrase(object):
         self.date = date
         self.subphrases = subphrases
         self.links = links
+        self.full_flat = full_flat
         self.attrs = kwargs
 
         # Calculated attributes
@@ -33,8 +34,6 @@ class NounPhrase(object):
         if self.conj:
             self.rec_conj_ = []
             for t in self.conj:
-                if t.node.startswith('CONJOINED'):
-                    continue
                 if t.node.startswith('CONJUNCTION'):
                     self.rec_conj_.append(t[0])
                 elif t.node.startswith('CONJ'):
@@ -44,6 +43,7 @@ class NounPhrase(object):
 
     def __repr__(self):
         repr = StringIO()
+        print >> repr, self.full_flat
         attrs_repr = ', '.join(['%s: %s' % it for it in self.attrs.items()])
         print >> repr, '%s [%s]' % (self.role, attrs_repr)
         if self.conj:

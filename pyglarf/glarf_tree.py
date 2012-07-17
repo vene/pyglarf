@@ -148,7 +148,10 @@ class GlarfTree(Tree):
 
                 # key fields
                 elif child.node.startswith('NAME'):
-                    name.append(child)
+                    if child[0].node == 'PP':
+                        subphrases[child.node] = child[0]
+                    else:
+                        name.append(child)
                 elif child.node == 'REG-DATE':
                     date = child
                 elif child.node.startswith('CONJ') and \
@@ -163,7 +166,7 @@ class GlarfTree(Tree):
                         links[child.node].append(idx[0])
 
         return NounPhrase(index, head, role, name, conj, date, subphrases,
-                          links, **attrs)
+                          links, np.print_flat(), **attrs)
 
     def _build_rel(self, parent, pred):
         """Construct a relation from an appropriate Tree."""
