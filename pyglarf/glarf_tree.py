@@ -130,7 +130,7 @@ class GlarfTree(Tree):
         conj = []
         date = None
         attrs = np.attributes()
-        index = attrs.pop('INDEX', None)
+        index = attrs.get('INDEX', None)
         if index is None:
             index = np.index()
         subphrases = {}  # specifiers, complements and relative clauses
@@ -160,10 +160,8 @@ class GlarfTree(Tree):
 
                 # links
                 elif child.node in ('APPOSITE', 'AFFILIATED'):
-                    links[child.node] = []
-                    for idx in filter(lambda tr: tr.node.startswith('INDEX'),
-                                      child[0]):
-                        links[child.node].append(idx[0])
+                    links[child.node] = [idx[0] for idx in child[0]
+                                         if idx.node.startswith('INDEX')]
 
         return NounPhrase(index, head, role, name, conj, date, subphrases,
                           links, np.print_flat(), **attrs)
