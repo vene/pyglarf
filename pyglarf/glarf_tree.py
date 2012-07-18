@@ -105,7 +105,7 @@ class GlarfTree(Tree):
             return phrase.most_specific_head()
 
     def cat_range(self):
-        leaves = [k for _, ks in self.ptb_leaves() for k in ks.split('+')]
+        leaves = [k for ks in self.ptb_leaves() for k in ks[1:]]
         if not leaves:
             return ''
         elif self.height() == 2:
