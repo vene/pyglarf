@@ -97,24 +97,38 @@ class GlarfTree(Tree):
         else:
             return head.most_specific_head()
 
-    def head_by_id(id_nr):
+    def head_by_id(self, id_nr):
         phrase = self.phrase_by_id(id_nr)
         if not phrase:
             return ''
         else:
             return phrase.most_specific_head()
 
-    def print_flat(self, indices=True):
+    def cat_range(self):
+        leaves = [k for _, ks in self.ptb_leaves() for k in ks.split('+')]
+        if not leaves:
+            return ''
+        elif self.height() == 2:
+            return '%s %s-%s' % (self.node, leaves[0], leaves[-1])
+        else:
+            return '%s+%s %s-%s' % (self.node, self[0].node, leaves[0],
+                                    leaves[-1])
+
+    def print_flat(self, indices=True, structure=True):
         if self.height() == 2:
             if indices:
                 # ex.: John/1, or: "put off"/5+6
-                return '%s/%s' % (self[0], '+'.join(self[1:]))
+                output = '%s/%s' % (self[0], '+'.join(self[1:]))
             else:
                 # ex.: John, or "put off"
-                return str(self[0])
+                output = str(self[0])
         else:
-            return ' '.join(leaf.print_flat(indices)
+            output = ' '.join(leaf.print_flat(indices)
                             for leaf in self.ptb_leaves())
+            if structure:
+                output += ' (%s)' % ', '.join(filter(lambda x: x,
+                                              (t.cat_range() for t in self)))
+        return output
 
     def parent(self, subtree):
         # XXX: why can't we use trees with backlinks?
