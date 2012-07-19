@@ -71,7 +71,8 @@ class GlarfWrapper(object):
     def __init__(self, path=PATH, verbose=0):
         self.path = path
         self.verbose = verbose
-        self._glarf_regex = re.compile('(\(\(.*?\(SENTENCE-OFFSET [0-9]+\)+)',
+        self._glarf_regex = re.compile('(\(\(\*\*\*ERROR\*\*\*\)\)|'
+                                       '\(\(.*?\(SENTENCE-OFFSET [0-9]+\)+)',
                                        re.DOTALL)
 
     def __enter__(self):
@@ -197,5 +198,5 @@ class GlarfWrapper(object):
         return (jet_output.splitlines(),
                 filter(lambda x: not x.startswith('#') and len(x) > 0,
                        (s.strip() for s in parse_output.splitlines())),
-                filter(len, (s.strip() for s
-                             in re.split(self._glarf_regex, glarf_output))))
+                [s.strip() for s
+                             in re.findall(self._glarf_regex, glarf_output)])
