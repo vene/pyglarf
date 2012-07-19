@@ -7,7 +7,13 @@ test_sentences = ["Seven years after the bandages last came off, actor "
                   "retired, and with a grown-up son Alex.", "Hello, world."]
 
 
-def test_error():
+def test_split():
+    """Test correct splitting of Glarf output
+
+    This tests two particular cases: The first sentence failes with a Glarf
+    output of ((***ERROR***)) whereas the second one gets parsed with a
+    root element of ((NP, and might fool a naive split where ((S occurs."""
+
     with GlarfWrapper() as gw:
         plain, parsed, glarfed = gw.make_sentences(test_sentences)
     assert_equal(len(plain), 2)
