@@ -225,11 +225,11 @@ class GlarfTree(Tree):
                             phrase = self._forest.phrase_by_id(*id_nr)
                             if not phrase:
                                 continue
-                            id_nr = '+'.join(id_nr)
                         else:
                             phrase = GlarfTree('**WARNING**', [
                                 'TREE+INDEX is only supported if you parse '
                                 'the entire forest with GlarfForest.'])
+                        id_nr = '/'.join(id_nr)
                     else:
                         raise ValueError('Invalid INDEX in argument.')
 
