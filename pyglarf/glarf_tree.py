@@ -187,6 +187,7 @@ class GlarfTree(Tree):
         attrs['CATEGORY'] = pred.node
         attrs['PARENT_CATEGORY'] = parent.node
         base = attrs.pop('BASE', head[0][0])
+        aux = {}
         index = pred.head()[0][1]
         args = {}
         advs = {}
@@ -195,6 +196,9 @@ class GlarfTree(Tree):
         for tr in pred:
             if not isinstance(tr, GlarfTree):
                 continue
+            if tr.node.startswith('AUX'):
+                aux[tr.node] = tr
+
             if tr.node.startswith('P-ARG'):
                 if tr[0] == ' (NIL)':
                     args[tr.node] = ('NIL', 'NIL', [], [])
@@ -202,18 +206,32 @@ class GlarfTree(Tree):
 
                 arg_type = tr[0].node
                 args[tr.node] = ([], arg_type, [], [])
-                ids = [k[1] for k in filter(lambda k: k[0].startswith('INDEX'),
-                                            tr[0].attributes().items())]
+                ids = [k[1]
+                       for k in tr[0].attributes().items()
+                       if k[0].startswith('INDEX')]
+                ids.extend([k[1].strip('|').split('+')
+                            for k in tr[0].attributes().items()
+                            if k[0] == 'TREE+INDEX'])
+
                 for id_nr in ids:
-                    phrase = self.phrase_by_id(id_nr)
+                    if isinstance(id_nr, str):
+                        phrase = self.phrase_by_id(id_nr)
+                    elif isinstance(id_nr, list):
+                        if self._forest is not None:
+                            phrase = self._forest.phrase_by_id(*id_nr)
+                            if not phrase:
+                                continue
+                            id_nr = '+'.join(id_nr)
+                        else:
+                            phrase = GlarfTree('**WARNING**', [
+                                'TREE+INDEX is only supported if you parse '
+                                'the entire forest with GlarfForest.'])
+                    else:
+                        raise ValueError('Invalid INDEX in argument.')
+
                     args[tr.node][0].append(phrase.node)
                     args[tr.node][2].append(id_nr)
                     args[tr.node][3].append(phrase)
-
-                if len(ids) == 0 and any(t.node == 'TREE+INDEX'
-                                         for t in tr[0]):
-                    args[tr.node][0].append('TREE+INDEX currently unsupported')
-                    args[tr.node][3].append(GlarfTree('', []))
 
             elif tr.node == 'P-SUPPORT':
                 support_type = tr[0].node
@@ -226,14 +244,14 @@ class GlarfTree(Tree):
             if not isinstance(tr, GlarfTree):
                 continue
             if any(tr.node.startswith(tag) for tag in ('ADV', 'OBJ', 'PRD',
-                                                       'L-SBJ')):
+                                                       'L-SBJ', 'PRT')):
                 ids = [k[1] for k in filter(lambda k: k[0].startswith('INDEX'),
                                             tr[0].attributes().items())]
 
                 adv_id = ids.pop() if len(ids) > 0 else None
                 advs[tr.node] = (tr[0].node, adv_id, tr[0])
 
-        return Relation(index, base, args, support, advs, **attrs)
+        return Relation(index, base, aux, args, support, advs, **attrs)
 
     def nps(self):
         is_np = lambda tr: tr.node == 'NP' and 'EC-TYPE' not in tr.daughters()
@@ -276,8 +294,6 @@ class GlarfTree(Tree):
             linked_structures = sorted(linked_structures, key=score)
             best = linked_structures[-1]
             key = best.index
-            #print key, idx
-            #print linked_structures
             if key == idx:
                 entities[key][1].extend(attr.print_flat(indices=False)
                                         for apos in linked_structures[:-1]

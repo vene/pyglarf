@@ -25,10 +25,11 @@ class Relation(object):
     attrs, dict:
         Any supplementary extracted attributes such as word sense or voice.
     """
-    def __init__(self, index, head=None, args=None, support=None, advs=None,
-                 flat_repr=True, **kwargs):
+    def __init__(self, index, head=None, aux=None, args=None, support=None,
+                 advs=None, flat_repr=True, **kwargs):
         self.index = index
         self.head = head
+        self.aux = aux
         self.args = args
         self.support = support
         self.advs = advs
@@ -40,7 +41,12 @@ class Relation(object):
         repr = StringIO.StringIO()
         attrs_repr = ', '.join(['%s: %s' % it for it in self.attrs.items()])
         print >> repr, '%s/%s [%s]' % (self.head, self.index, attrs_repr)
-
+        # show auxilliaries if exist:
+        if self.aux:
+            for node, tree in self.aux.items():
+                print >> repr, '%s: %s' % (node,
+                                           tree.print_flat(structure=False)
+                                           if self.flat_repr else tree)
         # show supports
         for role, tag, sid, sup_tree in self.support:
             print >> repr, 'P-SUPPORT [%s %s INDEX: %s]: %s' % (role, tag, sid,
