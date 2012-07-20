@@ -40,6 +40,10 @@ def _flat_list(l, indices=True):
 
 
 class GlarfTree(Tree):
+    def __init__(self, *args, **kwargs):
+        Tree.__init__(self, *args, **kwargs)
+        self._forest = None
+
     def daughters(self):
         """Get the tags of all direct descendants of the tree"""
         return (tr.node if isinstance(tr, Tree) else tr for tr in self)
