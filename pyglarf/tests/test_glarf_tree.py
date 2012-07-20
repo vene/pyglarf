@@ -68,6 +68,7 @@ def test_unsuccessful_parse():
 
 def test_leaves():
     """Test that all PTB leaves are captured"""
-    assert_equal(GlarfTree.glarf_parse(test_sentence).print_flat(),
+    assert_equal(GlarfTree.glarf_parse(test_sentence).print_flat(
+                 structure=False),
                  'In/0 |2003|/1 |,|/2 Yahoo/3 !/4 acquired/5 Overture/6 for/7 '
                  '$/8 |1.63|/9 billion/10 |.|/11')
