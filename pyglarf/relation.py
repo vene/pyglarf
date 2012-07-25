@@ -36,7 +36,7 @@ class Relation(object):
         self.attrs = kwargs
         self.flat_repr = flat_repr
 
-    def __repr__(self):
+    def __str__(self):
         """Returns a string representation of the predicate."""
         repr = StringIO.StringIO()
         attrs_repr = ', '.join(['%s: %s' % it for it in self.attrs.items()])
@@ -67,3 +67,10 @@ class Relation(object):
             print >> repr, '%s [%s INDEX: %s]: %s' % (adv, adv_type, adv_id,
                            tree.print_flat() if self.flat_repr else tree)
         return repr.getvalue()
+
+    def __repr__(self):
+        repr_dict = dict([(key, val.__repr__())
+                         for key, val in self.__dict__.items()])
+        return ("""Relation(index=%(index)s, head=%(head)s, aux=%(aux)s, \
+args=%(args)s, support=%(support)s, advs=%(advs)s, flat_repr=%(flat_repr)s, \
+**%(attrs)s)""" % repr_dict)
