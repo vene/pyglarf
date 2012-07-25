@@ -1,13 +1,13 @@
 from StringIO import StringIO
 
 
-def _flat_list(l, indices=True):
+def _flat_list(l, indices=True, structure=True):
     if l is None or len(l) == 0:
         return None
     elif isinstance(l, str):
         return l
     else:
-        return ' '.join(elem.print_flat(indices) for elem in l)
+        return ' '.join(elem.print_flat(indices, structure) for elem in l)
 
 
 class NounPhrase(object):
@@ -64,12 +64,12 @@ class NounPhrase(object):
 
     def short_repr(self):
         if self.name:
-            return _flat_list(self.name, indices=False)
+            return _flat_list(self.name, indices=False, structure=False)
         elif self.head:
-            return _flat_list(self.head, indices=False)
+            return _flat_list(self.head, indices=False, structure=False)
         elif self.date:
             return self.date[0]
         elif self.conj:
-            return _flat_list(self.rec_conj_, indices=False)
+            return _flat_list(self.rec_conj_, indices=False, structure=False)
         else:
             return None

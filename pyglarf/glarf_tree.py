@@ -30,13 +30,13 @@ leaf_pattern = re.compile(""" \(NIL\)   | # The (NIL) marker is a leaf value
 leaf_pattern = ' \(NIL\)|".*?"|\|.*?\||[^\s\(\)]+'
 
 
-def _flat_list(l, indices=True):
+def _flat_list(l, indices=True, structure=True):
     if l is None or len(l) == 0:
         return None
     elif isinstance(l, str):
         return l
     else:
-        return ' '.join(elem.print_flat(indices) for elem in l)
+        return ' '.join(elem.print_flat(indices, structure) for elem in l)
 
 
 class GlarfTree(Tree):
@@ -260,58 +260,6 @@ class GlarfTree(Tree):
     def nps(self):
         is_np = lambda tr: tr.node == 'NP' and 'EC-TYPE' not in tr.daughters()
         return ((self._build_np(np), np) for np in self.subtrees(is_np))
-
-    def entities(self):
-        """Extracts NPs and builds a dictionary of entity-attributes"""
-        entities = defaultdict(list)
-        nps_by_id = {}
-        entities = {}
-        for np, _ in self.nps():
-            idx = np.index
-            nps_by_id[idx] = np
-            entities[idx] = np.short_repr(), []
-
-        for idx, np in nps_by_id.items():
-            #print "***"
-            #print np.short_repr()
-            #if len(np.name) > 0:
-            #    key = _flat_list(np.name, indices=False)
-            #    entities[key].extend(
-            #        attr.print_flat(indices=False)
-            #        for attr in np.subphrases.values()
-            #    )
-            #elif np.head is not None:
-            # Take the linked np with the most semantic info (???)
-            linked_structures = [nps_by_id.get(sub_idx)
-                                 for _, indices in np.links.items()
-                                 for sub_idx in indices]
-            linked_structures.append(np)
-            linked_structures = filter(lambda x: x is not None, linked_structures)
-
-            # score counts the amount of semantic info, I hope
-            score = lambda np: len(filter(lambda (key, val):
-                                      key == 'PATTERN' and val == 'NAME' or
-                                      key == 'SEM-FEATURE' or
-                                      key == 'NE-TYPE',
-                                      np.attrs.items()))
-
-            linked_structures = sorted(linked_structures, key=score)
-            best = linked_structures[-1]
-            key = best.index
-            if key == idx:
-                entities[key][1].extend(attr.print_flat(indices=False)
-                                        for apos in linked_structures[:-1]
-                                        for attr in apos.subphrases.values())
-            else:
-                head = np.head
-                while isinstance(head, GlarfTree) and head.height() > 2:
-                    entities[key][1].append(head.print_flat(indices=False))
-                    head = head[0].head()
-
-            entities[key][1].extend(attr.print_flat(indices=False)
-                for attr in np.subphrases.values()
-            )
-        return entities
 
     def rels(self):
         with_args = lambda tr: any([daughter.startswith('P-ARG')
