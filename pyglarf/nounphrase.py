@@ -42,7 +42,7 @@ class NounPhrase(object):
                                           if t[0].head() is not None
                                           else t[0])
 
-    def __repr__(self):
+    def __str__(self):
         repr = StringIO()
         print >> repr, self.full_flat
         attrs_repr = ', '.join(['%s: %s' % it for it in self.attrs.items()])
@@ -66,6 +66,13 @@ class NounPhrase(object):
             print >> repr, 'ENTITY: %s' % self.entity
 
         return repr.getvalue()
+
+    def __repr__(self):
+        repr_dict = dict([(key, val.__repr__())
+                         for key, val in self.__dict__.items()])
+        return ("""NounPhrase(index=%(index)s, head=%(head)s, role=%(role)s, \
+name=%(name)s, conj=%(conj)s, date=%(date)s, subphrases=%(subphrases)s, \
+links=%(links)s, full_flat=%(full_flat)s, **%(attrs)s)""" % repr_dict)
 
     def short_repr(self):
         if self.name:
