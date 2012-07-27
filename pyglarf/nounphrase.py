@@ -13,7 +13,7 @@ def _flat_list(l, indices=True, structure=True):
 class NounPhrase(object):
     """Describes an NP."""
     def __init__(self, index, head, role, name, conj, date, subphrases, links,
-                 full_flat, **kwargs):
+                 full_flat, entity=None, **kwargs):
         assert index is not None
         self.index = index
         self.head = head
@@ -24,6 +24,7 @@ class NounPhrase(object):
         self.subphrases = subphrases
         self.links = links
         self.full_flat = full_flat
+        self.entity = entity
         self.attrs = kwargs
 
         # Calculated attributes
@@ -60,6 +61,10 @@ class NounPhrase(object):
 
         for tag, tree in sorted(self.subphrases.items()):
             print >> repr, '%s [%s]: %s' % (tag, tree.node, tree.print_flat())
+
+        if self.entity is not None:
+            print >> repr, 'ENTITY: %s' % self.entity
+
         return repr.getvalue()
 
     def short_repr(self):
