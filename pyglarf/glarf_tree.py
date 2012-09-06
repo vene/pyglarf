@@ -118,14 +118,20 @@ class GlarfTree(Tree):
             return '%s+%s %s-%s' % (self.node, self[0].node, leaves[0],
                                     leaves[-1])
 
-    def print_flat(self, indices=True, structure=True):
+    def print_flat(self, indices=True, structure=True, skip_det=False):
         if self.height() == 2:
-            if indices:
-                # ex.: John/1, or: "put off"/5+6
-                output = '%s/%s' % (self[0], '+'.join(self[1:]))
+            if skip_det and self.node == 'DT':
+                output = ''
             else:
-                # ex.: John, or "put off"
-                output = str(self[0])
+                if indices:
+                    # ex.: John/1, or: "put off"/5+6
+                    output = '%s/%s' % (self[0], '+'.join(self[1:]))
+                else:
+                    if self.node.startswith('|'):
+                        output = str(self[0]).split('|')[1]
+                    else:
+                        # ex.: John, or "put off"
+                        output = str(self[0])
         else:
             output = ' '.join(leaf.print_flat(indices)
                             for leaf in self.ptb_leaves())

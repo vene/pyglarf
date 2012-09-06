@@ -72,7 +72,8 @@ class NounPhrase(object):
                          for key, val in self.__dict__.items()])
         return ("""NounPhrase(index=%(index)s, head=%(head)s, role=%(role)s, \
 name=%(name)s, conj=%(conj)s, date=%(date)s, subphrases=%(subphrases)s, \
-links=%(links)s, full_flat=%(full_flat)s, **%(attrs)s)""" % repr_dict)
+links=%(links)s, full_flat=%(full_flat)s, entity=%(entity)s, **%(attrs)s)""" %
+        repr_dict)
 
     def short_repr(self):
         if self.name:
