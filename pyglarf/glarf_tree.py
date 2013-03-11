@@ -339,6 +339,9 @@ class GlarfTree(Tree):
     def glarf_parse(cls, s, raw_tuples_list=None):
         tree = cls.parse(s, leaf_pattern=leaf_pattern,
                          remove_empty_top_bracketing=True)
+        if tree.node == '***ERROR***':
+            raise ValueError('Glarf string resulted from parsing failure')
+
         tree._initialize_tuples(raw_tuples_list)
         tree._set_lemmas()
         return tree

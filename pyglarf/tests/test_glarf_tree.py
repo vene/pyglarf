@@ -72,3 +72,9 @@ def test_leaves():
                  pos=False, lemma=False, structure=False),
                  'In/0 |2003|/1 |,|/2 Yahoo/3 !/4 acquired/5 Overture/6 for/7 '
                  '$/8 |1.63|/9 billion/10 |.|/11')
+
+
+@raises(ValueError)
+def test_error_parse():
+    """Test that GLARF error parses raise exceptions"""
+    GlarfTree.glarf_parse("((***ERROR***))")
