@@ -312,7 +312,6 @@ class GlarfTree(Tree):
         return entities
 
     def rels(self):
-        print False
         with_args = lambda tr: any([daughter.startswith('P-ARG')
                                     for daughter in tr.daughters()])
         for pos in self.treepositions():
