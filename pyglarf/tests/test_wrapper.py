@@ -15,8 +15,9 @@ def test_split():
     root element of ((NP, and might fool a naive split where ((S occurs."""
 
     with GlarfWrapper() as gw:
-        plain, parsed, glarfed = gw.make_sentences(test_sentences)
+        plain, parsed, glarfed, tuples = gw.make_sentences(test_sentences)
     assert_equal(len(plain), 2)
     assert_equal(len(parsed), 2)
     assert_equal(len(glarfed), 2)
+    assert_equal(len(tuples), 2)
     assert_equal(glarfed[0], '((***ERROR***))')

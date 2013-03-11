@@ -36,11 +36,12 @@ class GlarfWrapper(object):
     --------
     >>> para = "A man arrived. He was whistling."
     >>> with GlarfWrapper() as glarf:
-    ...     sent_out, parse_out, glarf_out = glarf.make_paragraphs(para)
-    >>> for s, p, g in zip(sent_out, parse_out, glarf_out):
+    ...     sent_out, parse_out, glarf_out, tuple_out = glarf.make_paragraphs(para)
+    >>> for s, p, g, t in zip(sent_out, parse_out, glarf_out, tuple_out):
     ...     print s
     ...     print p
     ...     print g
+    ...     print t
     0 A man arrived.
     (S1 (S (NP (DT A) (NN man)) (VP (VBD arrived)) (. .)))
     ((S
@@ -53,6 +54,7 @@ class GlarfWrapper(object):
         (PTB2-POINTER |2+1|)))
       (PUNCTUATION (|.| |.| 3)) (PTB2-POINTER |0+2|) (TREE-NUM 0) (FILE-NAME "tmp")
       (INDEX 0) (SENTENCE-OFFSET 0)))
+    ['SBJ | SBJ | ARG1 | NIL | NIL | arrived | 6 | 2 | VBD | ARRIVE | NIL | NIL | NIL | 1 | NIL | NIL | NIL | man | 2 | 1 | NN | MAN | NIL | NIL | NIL ', 'Q-POS | Q-POS | NIL | NIL | NIL | man | 2 | 1 | NN | MAN | NIL | NIL | NIL | NIL | NIL | NIL | NIL | A | 0 | 0 | DT | A | NIL | NIL | NIL ']
     15 He was whistling.
     (S1 (S (NP (PRP He)) (VP (AUX was) (VP (VBG whistling))) (. .)))
     ((S (SBJ (NP (HEAD (PRP He 0)) (PTB2-POINTER |0+1|) (INDEX 2)))
@@ -65,6 +67,7 @@ class GlarfWrapper(object):
         (PTB2-POINTER |1+1|)))
       (PUNCTUATION (|.| |.| 3)) (PTB2-POINTER |0+2|) (TREE-NUM 1) (FILE-NAME "tmp")
       (INDEX 0) (SENTENCE-OFFSET 15)))
+    ['SBJ | SBJ | ARG0 | NIL | NIL | whistling | 22 | 2 | VBG | WHISTLE | NIL | NIL | NIL | 1 | NIL | NIL | NIL | He | 15 | 0 | PRP | HE | NIL | NIL | NIL ', 'AUX | AUX | NIL | NIL | NIL | whistling | 22 | 2 | VBG | WHISTLE | NIL | NIL | NIL | 1 | NIL | NIL | NIL | was | 18 | 1 | VBD | BE | NIL | NIL | NIL ']
 
     TODO: if it's too slow, support batch
     """
@@ -94,7 +97,8 @@ class GlarfWrapper(object):
             'in': in_file,
             'jet': in_file + '.sent',
             'parse': in_file + '.sent.chout',
-            'glarf': in_file + '.sent.ns-autopb101e'
+            'glarf': in_file + '.sent.ns-autopb101e',
+            'tuple': in_file + '.sent.ns-2005-fast-ace-n-tuple101e'
         }
         return self
 
@@ -115,11 +119,8 @@ class GlarfWrapper(object):
             raise RuntimeError('Glarf invocation failed. Output log can be '
                                'found in %s.' % self.log[1])
 
-        jet_output = open(self._filenames['jet']).read()
-        parse_output = open(self._filenames['parse']).read()
-        glarf_output = open(self._filenames['glarf']).read()
-
-        return jet_output, parse_output, glarf_output
+        return tuple(open(self._filenames[k]).read()
+                     for k in ('jet', 'parse', 'glarf', 'tuple'))
 
     def make_sentences(self, sentences):
         """Parse and analyze a sequence of sentences.
@@ -146,6 +147,11 @@ class GlarfWrapper(object):
             Corresponds to the file extension .sgm.ne-auto(...) from the Glarf
             output.
 
+        tuple_output: list, length: len(sentences)
+            The list of tuples obtained from the input sentences.
+            Corresponds to the file extension .sgm.ns-2005-fast-ace-n-tuple101e
+            from the Glarf output.  Some of the information in the tuples, such
+            as noun lemmas, is not present in the .sgm.ne-autopb101e file.
         """
         if isinstance(sentences, str):
             sentences = [sentences]
@@ -154,12 +160,14 @@ class GlarfWrapper(object):
             infile.writelines('<sentence>%s</sentence>\n' % sent
                               for sent in sentences)
 
-        jet_output, parse_output, glarf_output = self._invoke_glarf('a', 'N')
-        return (jet_output.splitlines(),
+        jet_out, parse_out, glarf_out, tuple_out = self._invoke_glarf('a', 'N')
+        return (jet_out.splitlines(),
                 filter(lambda x: not x.startswith('#') and len(x) > 0,
-                       (s.strip() for s in parse_output.splitlines())),
+                       (s.strip() for s in parse_out.splitlines())),
                 filter(len, (s.strip() for s
-                             in re.split(self._glarf_regex, glarf_output))))
+                             in re.split(self._glarf_regex, glarf_out))),
+                [tree_tuples.splitlines()[1:]
+                 for tree_tuples in tuple_out.split(';;')[1:]])
 
     def make_paragraphs(self, paragraphs):
         """Parse and analyze a sequence of paragraphs.
@@ -186,6 +194,12 @@ class GlarfWrapper(object):
             Corresponds to the file extension .sgm.ne-auto(...) from the Glarf
             output.
 
+        tuple_output: list, length: len(sentences)
+            The list of tuples obtained from the input sentences.
+            Corresponds to the file extension .sgm.ns-2005-fast-ace-n-tuple101e
+            from the Glarf output.  Some of the information in the tuples, such
+            as noun lemmas, is not present in the .sgm.ne-autopb101e file.
+
         """
         if isinstance(paragraphs, str):
             paragraphs = [paragraphs]
@@ -194,9 +208,11 @@ class GlarfWrapper(object):
             infile.writelines(['<TEXT><P>%s</P></TEXT>\n' % par
                               for par in paragraphs])
 
-        jet_output, parse_output, glarf_output = self._invoke_glarf('b', 'N P')
-        return (jet_output.splitlines(),
+        jet_out, parse_out, glarf_out, tuple_out = self._invoke_glarf('b',
+                                                                      'N P')
+        return (jet_out.splitlines(),
                 filter(lambda x: not x.startswith('#') and len(x) > 0,
-                       (s.strip() for s in parse_output.splitlines())),
-                [s.strip() for s
-                             in re.findall(self._glarf_regex, glarf_output)])
+                       (s.strip() for s in parse_out.splitlines())),
+                [s.strip() for s in re.findall(self._glarf_regex, glarf_out)],
+                [tree_tuples.splitlines()[1:]
+                 for tree_tuples in tuple_out.split(';;')[1:]])
