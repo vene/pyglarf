@@ -30,19 +30,11 @@ leaf_pattern = re.compile(""" \(NIL\)   | # The (NIL) marker is a leaf value
 leaf_pattern = ' \(NIL\)|".*?"|\|.*?\||[^\s\(\)]+'
 
 
-def _flat_list(l, indices=True):
-    if l is None or len(l) == 0:
-        return None
-    elif isinstance(l, str):
-        return l
-    else:
-        return ' '.join(elem.print_flat(indices) for elem in l)
-
-
 class GlarfTree(Tree):
     def __init__(self, *args, **kwargs):
         Tree.__init__(self, *args, **kwargs)
         self._forest = None
+        self._tuples = None
 
     def daughters(self):
         """Get the tags of all direct descendants of the tree"""
@@ -91,7 +83,7 @@ class GlarfTree(Tree):
         for subtr in self:
             if isinstance(subtr, Tree) and subtr.node == 'HEAD':
                 return subtr.index()
-        return 'leaf' + '+'.join(self.ptb_leaves().next()[1:])
+        return 'leaf' + '+'.join(self.ptb_leaves().next()[2:])
         return None
 
     def most_specific_head(self):
@@ -109,26 +101,31 @@ class GlarfTree(Tree):
             return phrase.most_specific_head()
 
     def cat_range(self):
+        """Returns the struture representation: ROLE START-END"""
         leaves = [k for ks in self.ptb_leaves() for k in ks[1:]]
         if not leaves:
             return ''
         elif self.height() == 2:
-            return '%s %s-%s' % (self.node, leaves[0], leaves[-1])
+            return '%s %s-%s' % (self.node, leaves[1], leaves[-1])
         else:
-            return '%s+%s %s-%s' % (self.node, self[0].node, leaves[0],
+            return '%s+%s %s-%s' % (self.node, self[0].node, leaves[1],
                                     leaves[-1])
 
-    def print_flat(self, indices=True, structure=True):
+    def print_flat(self, indices=True, lemma=True, pos=True, structure=True):
         if self.height() == 2:
+            my_form, my_lemma = self[:2]
+            my_idx = self[2:]
+            output = str(my_form)
+            if lemma:
+                output += '/%s' % my_lemma
+            if pos:
+                output += '/%s' % self.node
             if indices:
                 # ex.: John/1, or: "put off"/5+6
-                output = '%s/%s' % (self[0], '+'.join(self[1:]))
-            else:
-                # ex.: John, or "put off"
-                output = str(self[0])
+                output += '/%s' % '+'.join(my_idx)
         else:
-            output = ' '.join(leaf.print_flat(indices)
-                            for leaf in self.ptb_leaves())
+            output = ' '.join(leaf.print_flat(indices, lemma, pos, structure)
+                              for leaf in self.ptb_leaves())
             if structure:
                 output += ' (%s)' % ', '.join(filter(lambda x: x,
                                               (t.cat_range() for t in self)))
@@ -190,9 +187,10 @@ class GlarfTree(Tree):
         attrs = pred.attributes()
         attrs['CATEGORY'] = pred.node
         attrs['PARENT_CATEGORY'] = parent.node
+        attrs['FORM'] = head[0][0]
         base = attrs.pop('BASE', head[0][0])
         aux = {}
-        index = pred.head()[0][1]
+        index = '+'.join(head[0][2:])
         args = {}
         advs = {}
         support = []
@@ -290,37 +288,57 @@ class GlarfTree(Tree):
 
             # score counts the amount of semantic info, I hope
             score = lambda np: len(filter(lambda (key, val):
-                                      key == 'PATTERN' and val == 'NAME' or
-                                      key == 'SEM-FEATURE' or
-                                      key == 'NE-TYPE',
-                                      np.attrs.items()))
+                                   key == 'PATTERN' and val == 'NAME' or
+                                   key == 'SEM-FEATURE' or
+                                   key == 'NE-TYPE',
+                                   np.attrs.items()))
 
             linked_structures = sorted(linked_structures, key=score)
             best = linked_structures[-1]
             key = best.index
             if key == idx:
-                entities[key][1].extend(attr.print_flat(indices=False)
+                entities[key][1].extend(attr.print_flat(indices=False, lemma=False, pos=False, structure=False)
                                         for apos in linked_structures[:-1]
                                         for attr in apos.subphrases.values())
             else:
                 head = np.head
                 while isinstance(head, GlarfTree) and head.height() > 2:
-                    entities[key][1].append(head.print_flat(indices=False))
+                    entities[key][1].append(head.print_flat(indices=False, lemma=False, pos=False, structure=False))
                     head = head[0].head()
 
-            entities[key][1].extend(attr.print_flat(indices=False)
-                for attr in np.subphrases.values()
+            entities[key][1].extend(attr.print_flat(indices=False, lemma=False, pos=False, structure=False)
+                                    for attr in np.subphrases.values()
             )
         return entities
 
     def rels(self):
+        print False
         with_args = lambda tr: any([daughter.startswith('P-ARG')
                                     for daughter in tr.daughters()])
         for pos in self.treepositions():
             if isinstance(self[pos], GlarfTree) and with_args(self[pos]):
                 yield self._build_rel(self[pos[:-2]], self[pos])
 
+    def _initialize_tuples(self, raw_tuples_list):
+        """Parse Glarf tuple file and use the information from it"""
+        self._tuples = [tuple(val.strip() for val in t.split('|'))
+                        for t in raw_tuples_list] if raw_tuples_list else []
+        return self
+
+    def _set_lemmas(self):
+        lemmas = {}
+        for t in self._tuples:
+            lemmas[t[7]] = t[9]
+            lemmas[t[19]] = t[21]
+        for token in self.ptb_leaves():
+            lemma = lemmas.get(token[1], '').lower()
+            token.insert(1, lemma)
+        return self
+
     @classmethod
-    def glarf_parse(cls, s):
-        return cls.parse(s, leaf_pattern=leaf_pattern,
-                          remove_empty_top_bracketing=True)
+    def glarf_parse(cls, s, raw_tuples_list=None):
+        tree = cls.parse(s, leaf_pattern=leaf_pattern,
+                         remove_empty_top_bracketing=True)
+        tree._initialize_tuples(raw_tuples_list)
+        tree._set_lemmas()
+        return tree

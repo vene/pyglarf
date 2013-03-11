@@ -1,13 +1,13 @@
 from StringIO import StringIO
 
 
-def _flat_list(l, indices=True):
+def _flat_list(l, indices=True, lemma=False, pos=False, structure=False):
     if l is None or len(l) == 0:
         return None
     elif isinstance(l, str):
         return l
     else:
-        return ' '.join(elem.print_flat(indices) for elem in l)
+        return ' '.join(elem.print_flat(indices, lemma, pos, structure) for elem in l)
 
 
 class NounPhrase(object):

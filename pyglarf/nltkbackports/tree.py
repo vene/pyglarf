@@ -29,7 +29,7 @@ class Tree(list):
     where a leaf is a basic (non-tree) value; and a subtree is a
     nested Tree.
 
-        >>> from nltk.tree l Tree
+        >>> from nltk.tree import Tree
         >>> print Tree(1, [2, Tree(3, [4]), 5])
         (1 2 (3 4) 5)
         >>> vp = Tree('VP', [Tree('V', ['saw']),
@@ -85,7 +85,7 @@ class Tree(list):
         It is equivalent to calling the class method ``Tree.parse(s)``.
     """
     def __init__(self, node_or_str, children=None):
-        if children is None: 
+        if children is None:
             if not isinstance(node_or_str, basestring):
                 raise TypeError("%s: Expected a node value and child list "
                                 "or a single string" % type(self).__name__)
