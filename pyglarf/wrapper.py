@@ -122,6 +122,18 @@ class GlarfWrapper(object):
         return tuple(open(self._filenames[k]).read()
                      for k in ('jet', 'parse', 'glarf', 'tuple'))
 
+    def _split_glarf_tuples(self, txt_tuples):
+        """Splits raw tuple file into array of arrays, handling missing trees"""
+        tp_dict = {}
+        for tree_tuples in txt_tuples.split(';;')[1:]:
+            tuple_lines = tree_tuples.splitlines()
+            # First line looks like "Tuples for Tree 152"
+            tree_idx = int(tuple_lines[0].rsplit(' ', 1)[1])
+            tuples = tuple_lines[1:]
+            tp_dict[tree_idx] = tuples
+        # Build array from int-keyed dict, filling missing values with None
+        return [tp_dict.get(k, None) for k in xrange(max(tp_dict.keys()) + 1)]
+
     def make_sentences(self, sentences):
         """Parse and analyze a sequence of sentences.
 
@@ -166,8 +178,7 @@ class GlarfWrapper(object):
                        (s.strip() for s in parse_out.splitlines())),
                 filter(len, (s.strip() for s
                              in re.split(self._glarf_regex, glarf_out))),
-                [tree_tuples.splitlines()[1:]
-                 for tree_tuples in tuple_out.split(';;')[1:]])
+                self._split_glarf_tuples(tuple_out))
 
     def make_paragraphs(self, paragraphs):
         """Parse and analyze a sequence of paragraphs.
@@ -214,5 +225,4 @@ class GlarfWrapper(object):
                 filter(lambda x: not x.startswith('#') and len(x) > 0,
                        (s.strip() for s in parse_out.splitlines())),
                 [s.strip() for s in re.findall(self._glarf_regex, glarf_out)],
-                [tree_tuples.splitlines()[1:]
-                 for tree_tuples in tuple_out.split(';;')[1:]])
+                self._split_glarf_tuples(tuple_out))

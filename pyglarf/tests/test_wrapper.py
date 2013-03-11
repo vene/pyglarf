@@ -21,3 +21,4 @@ def test_split():
     assert_equal(len(glarfed), 2)
     assert_equal(len(tuples), 2)
     assert_equal(glarfed[0], '((***ERROR***))')
+    assert_equal(tuples[0], None)  # just a convention
