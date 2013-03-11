@@ -1,6 +1,7 @@
 from pyglarf import GlarfTree
 import warnings
 
+
 class GlarfForest(list):
     """A forest of GlarfTrees
 
@@ -14,11 +15,16 @@ class GlarfForest(list):
     glarf_parses: list of strings,
         List of Glarf output strings with which to build the forest. This
         is the third return value of GlarfWrapper.make_* functions.
+
+    glarf_tuples: list of lists, optional
+        List of raw text Glarf tuples. Must match length of glarf_parses.
     """
 
-    def __init__(self, glarf_parses):
-        for s in glarf_parses:
-            tree = GlarfTree.glarf_parse(s)
+    def __init__(self, glarf_parses, glarf_tuples=None):
+        if not glarf_tuples:
+            glarf_tuples = [[] for _ in glarf_parses]
+        for s, t in zip(glarf_parses, glarf_tuples):
+            tree = GlarfTree.glarf_parse(s, t)
             tree._forest = self
             self.append(tree)
 
