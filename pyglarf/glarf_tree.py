@@ -113,16 +113,19 @@ class GlarfTree(Tree):
 
     def print_flat(self, indices=True, lemma=True, pos=True, structure=True):
         if self.height() == 2:
-            my_form, my_lemma = self[:2]
-            my_idx = self[2:]
-            output = str(my_form)
-            if lemma:
-                output += '/%s' % my_lemma
-            if pos:
-                output += '/%s' % self.node
-            if indices:
-                # ex.: John/1, or: "put off"/5+6
-                output += '/%s' % '+'.join(my_idx)
+            if self.node in glarf_pos_tags:
+                my_form, my_lemma = self[:2]
+                my_idx = self[2:]
+                output = str(my_form)
+                if lemma:
+                    output += '/%s' % my_lemma
+                if pos:
+                    output += '/%s' % self.node
+                if indices:
+                    # ex.: John/1, or: "put off"/5+6
+                    output += '/%s' % '+'.join(my_idx)
+            else:
+                output = ''
         else:
             output = ' '.join(leaf.print_flat(indices, lemma, pos, structure)
                               for leaf in self.ptb_leaves())
