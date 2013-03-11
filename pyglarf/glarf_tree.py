@@ -53,12 +53,12 @@ class GlarfTree(Tree):
 
     def phrase_by_id(self, id_nr):
         res = self.subtrees(lambda tr: any((isinstance(subtr, Tree)
-                                                  and subtr.node == 'INDEX'
-                                                  and subtr[0] == id_nr
-                                                  for subtr in tr))
-                                       and not any((isinstance(subtr, Tree)
-                                                  and subtr.node == 'EC-TYPE'
-                                                  for subtr in tr)))
+                                            and subtr.node == 'INDEX'
+                                            and subtr[0] == id_nr
+                                            for subtr in tr))
+                            and not any((isinstance(subtr, Tree)
+                                        and subtr.node == 'EC-TYPE'
+                                        for subtr in tr)))
         res = list(res)
         if len(res) == 1:
             result = res[0]
@@ -68,7 +68,7 @@ class GlarfTree(Tree):
         elif len(res) > 1:
             return GlarfTree('', res)
         else:
-            return None
+            return GlarfTree('?', [])
 
     def head(self):
         for subtr in self:
