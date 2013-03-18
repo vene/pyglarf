@@ -1,7 +1,7 @@
 from StringIO import StringIO
 
 
-def _flat_list(l, indices=True, lemma=False, pos=False, structure=False):
+def _flat_list(l, indices=True, lemma=True, pos=True, structure=False):
     if l is None or len(l) == 0:
         return None
     elif isinstance(l, str):
@@ -71,12 +71,12 @@ links=%(links)s, full_flat=%(full_flat)s, **%(attrs)s)""" % repr_dict)
 
     def short_repr(self):
         if self.name:
-            return _flat_list(self.name, indices=False)
+            return _flat_list(self.name)
         elif self.head:
-            return _flat_list(self.head, indices=False)
+            return _flat_list(self.head)
         elif self.date:
             return self.date[0]
         elif self.conj:
-            return _flat_list(self.rec_conj_, indices=False)
+            return _flat_list(self.rec_conj_)
         else:
             return None

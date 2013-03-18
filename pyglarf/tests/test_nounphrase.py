@@ -29,8 +29,6 @@ apposite = GlarfTree(
     'FILE-NAME', ['"tmp"']), GlarfTree('INDEX', ['0']), GlarfTree(
     'SENTENCE-OFFSET', ['0'])])
 
-apposite._initialize_tuples([])
-apposite._set_lemmas()
 nps = [np for np, _ in apposite.nps()]
 
 
